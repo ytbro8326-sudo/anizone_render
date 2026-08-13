@@ -648,8 +648,13 @@ async def render_webpage():
 
     function playInMegaPlayer(url, ref = '', origin = '') {
       const playerFrame = document.getElementById('mainPlayerFrame');
-      if (playerFrame && playerFrame.contentWindow) {
-        playerFrame.contentWindow.postMessage({ type: 'PLAY_STREAM', url: url, ref: ref, origin: origin }, '*');
+      if (playerFrame) {
+        const isDirect = (selectedServer === 'anizone' || url.includes('vid-cdn.xyz') || url.includes('anizone'));
+        const targetSrc = `/player?url=${encodeURIComponent(url)}${isDirect ? '&proxyMode=direct' : ''}`;
+        playerFrame.src = targetSrc;
+        if (playerFrame.contentWindow) {
+          playerFrame.contentWindow.postMessage({ type: 'PLAY_STREAM', url: url, ref: isDirect ? '' : ref, origin: isDirect ? '' : origin }, '*');
+        }
         document.getElementById('resultsCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }

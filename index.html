@@ -958,16 +958,24 @@
 
             if (!stream || (!stream.url && !stream.embed_url)) return;
 
-            // Check if stream is an AniZone stream or iframe type stream
-            const isAniZone = stream.server && (
+            const targetUrl = stream.url || stream.embed_url;
+
+            // Check if stream is an AniZone / Server A stream, m3u8 from vid-cdn.xyz, or iframe type stream
+            const isAniZone = (stream.server && (
                 stream.server.toLowerCase().includes('anizone') ||
                 stream.server.toLowerCase().includes('server a')
-            );
+            )) || (targetUrl && (targetUrl.includes('vid-cdn.xyz') || targetUrl.includes('anizone')));
 
             if (stream.type === 'iframe' || isAniZone) {
                 video.style.display = 'none';
                 video.pause();
-                iframe.src = stream.embed_url || stream.url;
+                
+                // Embed AniZone m3u8 directly inside MegaPlayer iframe without proxy
+                if (targetUrl.includes('.m3u8') || targetUrl.includes('vid-cdn.xyz')) {
+                    iframe.src = `megaplayer.html?url=${encodeURIComponent(targetUrl)}&proxyMode=direct`;
+                } else {
+                    iframe.src = targetUrl;
+                }
                 iframe.style.display = 'block';
                 renderServerMenu();
                 return;

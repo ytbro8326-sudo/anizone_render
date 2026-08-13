@@ -833,6 +833,14 @@ window.addEventListener('DOMContentLoaded', async () => {
     const sUrl = params.get('url');
     const sRef = params.get('ref') || '';
     const sOrig = params.get('origin') || '';
+    const sProxy = params.get('proxyMode') || params.get('proxy') || '';
+    if (sProxy === 'direct' || sProxy === 'none' || sUrl.includes('vid-cdn.xyz') || sUrl.includes('anizone')) {
+      document.getElementById('proxyMode').value = 'direct';
+      onProxyModeChange();
+    } else if (sProxy) {
+      document.getElementById('proxyMode').value = sProxy;
+      onProxyModeChange();
+    }
     document.getElementById('urlIn').value = sUrl;
     if (sRef) document.getElementById('refIn').value = sRef;
     if (sOrig) document.getElementById('origIn').value = sOrig;
