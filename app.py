@@ -647,6 +647,17 @@ async def render_webpage():
     }
 
     function playInMegaPlayer(url, ref = '', origin = '') {
+      // Clean url if it contains /proxy?url=
+      if (url && url.includes('/proxy?url=')) {
+        try {
+          const parsed = new URL(url, window.location.origin);
+          const rawUrl = parsed.searchParams.get('url');
+          if (rawUrl) url = rawUrl;
+          if (parsed.searchParams.get('ref')) ref = parsed.searchParams.get('ref');
+          if (parsed.searchParams.get('origin')) origin = parsed.searchParams.get('origin');
+        } catch (e) {}
+      }
+
       const playerFrame = document.getElementById('mainPlayerFrame');
       if (playerFrame) {
         if (selectedServer === 'megaplay' || !ref || url.includes('megaplay') || url.includes('server_a3')) {
@@ -657,10 +668,9 @@ async def render_webpage():
         if (isAniZoneDirect) {
           playerFrame.src = url;
         } else {
-          const proxiedUrl = `/proxy?url=${encodeURIComponent(url)}&ref=${encodeURIComponent(ref || 'https://megaplay.buzz/')}&origin=${encodeURIComponent(origin || 'https://megaplay.buzz')}`;
-          playerFrame.src = `/megaplayer.html?url=${encodeURIComponent(proxiedUrl)}&ref=${encodeURIComponent(ref || 'https://megaplay.buzz/')}&origin=${encodeURIComponent(origin || 'https://megaplay.buzz')}&autoplay=true`;
+          playerFrame.src = `/megaplayer.html?url=${encodeURIComponent(url)}&ref=${encodeURIComponent(ref || 'https://megaplay.buzz/')}&origin=${encodeURIComponent(origin || 'https://megaplay.buzz')}&proxyMode=custom&autoplay=true`;
           if (playerFrame.contentWindow) {
-            playerFrame.contentWindow.postMessage({ type: 'PLAY_STREAM', url: proxiedUrl, ref: ref || 'https://megaplay.buzz/', origin: origin || 'https://megaplay.buzz' }, '*');
+            playerFrame.contentWindow.postMessage({ type: 'PLAY_STREAM', url: url, ref: ref || 'https://megaplay.buzz/', origin: origin || 'https://megaplay.buzz', proxyMode: 'custom' }, '*');
           }
         }
         document.getElementById('resultsCard').scrollIntoView({ behavior: 'smooth', block: 'start' });

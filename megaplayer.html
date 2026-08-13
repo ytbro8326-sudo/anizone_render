@@ -835,6 +835,17 @@ window.addEventListener('DOMContentLoaded', async () => {
     let sOrig = params.get('origin') || '';
     const sProxy = params.get('proxyMode') || params.get('proxy') || 'custom';
 
+    // Unwrap if sUrl contains /proxy?url=
+    if (sUrl && sUrl.includes('/proxy?url=')) {
+      try {
+        const parsed = new URL(sUrl, window.location.origin);
+        const innerUrl = parsed.searchParams.get('url');
+        if (innerUrl) sUrl = innerUrl;
+        if (!sRef && parsed.searchParams.get('ref')) sRef = parsed.searchParams.get('ref');
+        if (!sOrig && parsed.searchParams.get('origin')) sOrig = parsed.searchParams.get('origin');
+      } catch (e) {}
+    }
+
     if (sUrl.includes('megaplay') || sUrl.includes('server_a3') || (sRef && sRef.includes('megaplay.buzz')) || !sRef) {
       sRef = sRef || 'https://megaplay.buzz/';
       sOrig = sOrig || 'https://megaplay.buzz';
@@ -863,9 +874,21 @@ window.addEventListener('DOMContentLoaded', async () => {
 // PostMessage Listener for embedding control
 window.addEventListener('message', (event) => {
   if (event.data && (event.data.type === 'PLAY_STREAM' || event.data.url)) {
-    const sUrl = event.data.url;
+    let sUrl = event.data.url;
     let sRef = event.data.ref || event.data.referer || '';
     let sOrig = event.data.origin || '';
+
+    // Unwrap if sUrl contains /proxy?url=
+    if (sUrl && sUrl.includes('/proxy?url=')) {
+      try {
+        const parsed = new URL(sUrl, window.location.origin);
+        const innerUrl = parsed.searchParams.get('url');
+        if (innerUrl) sUrl = innerUrl;
+        if (!sRef && parsed.searchParams.get('ref')) sRef = parsed.searchParams.get('ref');
+        if (!sOrig && parsed.searchParams.get('origin')) sOrig = parsed.searchParams.get('origin');
+      } catch (e) {}
+    }
+
     if (sUrl.includes('megaplay') || sUrl.includes('server_a3') || !sRef) {
       sRef = sRef || 'https://megaplay.buzz/';
       sOrig = sOrig || 'https://megaplay.buzz';
