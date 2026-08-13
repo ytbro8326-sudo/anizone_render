@@ -649,12 +649,18 @@ async def render_webpage():
     function playInMegaPlayer(url, ref = '', origin = '') {
       const playerFrame = document.getElementById('mainPlayerFrame');
       if (playerFrame) {
-        if (selectedServer === 'anizone' || url.includes('vid-cdn.xyz') || url.includes('anizone')) {
+        if (selectedServer === 'megaplay' || !ref || url.includes('megaplay') || url.includes('server_a3')) {
+          ref = ref || 'https://megaplay.buzz/';
+          origin = origin || 'https://megaplay.buzz';
+        }
+        const isAniZoneDirect = (selectedServer === 'anizone' || url.includes('vid-cdn.xyz')) && !url.includes('megaplay');
+        if (isAniZoneDirect) {
           playerFrame.src = url;
         } else {
-          playerFrame.src = `/player?url=${encodeURIComponent(url)}`;
+          const proxiedUrl = `/proxy?url=${encodeURIComponent(url)}&ref=${encodeURIComponent(ref || 'https://megaplay.buzz/')}&origin=${encodeURIComponent(origin || 'https://megaplay.buzz')}`;
+          playerFrame.src = `/megaplayer.html?url=${encodeURIComponent(proxiedUrl)}&ref=${encodeURIComponent(ref || 'https://megaplay.buzz/')}&origin=${encodeURIComponent(origin || 'https://megaplay.buzz')}&autoplay=true`;
           if (playerFrame.contentWindow) {
-            playerFrame.contentWindow.postMessage({ type: 'PLAY_STREAM', url: url, ref: ref, origin: origin }, '*');
+            playerFrame.contentWindow.postMessage({ type: 'PLAY_STREAM', url: proxiedUrl, ref: ref || 'https://megaplay.buzz/', origin: origin || 'https://megaplay.buzz' }, '*');
           }
         }
         document.getElementById('resultsCard').scrollIntoView({ behavior: 'smooth', block: 'start' });

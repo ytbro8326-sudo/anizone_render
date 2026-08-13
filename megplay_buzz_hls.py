@@ -91,6 +91,9 @@ def get_megaplay_streams_by_mal_id(mal_id: int, episode: int) -> dict:
                 "url": m3u8,
                 "type": "hls",
                 "quality": f"{typ.upper()} Master",
+                "referer": "https://megaplay.buzz/",
+                "ref": "https://megaplay.buzz/",
+                "origin": "https://megaplay.buzz",
                 "intro": intro,
                 "outro": outro
             })
@@ -104,6 +107,9 @@ def get_megaplay_streams_by_mal_id(mal_id: int, episode: int) -> dict:
                     "url": v["url"],
                     "type": "hls",
                     "quality": f"{typ.upper()} {res_str}",
+                    "referer": "https://megaplay.buzz/",
+                    "ref": "https://megaplay.buzz/",
+                    "origin": "https://megaplay.buzz",
                     "intro": intro,
                     "outro": outro
                 })
