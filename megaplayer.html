@@ -289,8 +289,8 @@ select.fi-sel:focus { border-color: var(--acc); }
       <div>
         <div class="plabel">PROXY MODE</div>
         <select class="fi-sel" id="proxyMode" onchange="onProxyModeChange()">
+          <option value="custom" selected>🌐 Custom Proxy (foxy-doxy / external)</option>
           <option value="local">🖥️ Local Proxy (Python server)</option>
-          <option value="custom">🌐 Custom Proxy (foxy-doxy / external)</option>
           <option value="direct">⚡ Direct (no proxy)</option>
         </select>
       </div>
@@ -833,21 +833,18 @@ window.addEventListener('DOMContentLoaded', async () => {
     let sUrl = params.get('url');
     let sRef = params.get('ref') || '';
     let sOrig = params.get('origin') || '';
-    const sProxy = params.get('proxyMode') || params.get('proxy') || '';
+    const sProxy = params.get('proxyMode') || params.get('proxy') || 'custom';
 
-    if (sUrl.includes('megaplay') || sUrl.includes('server_a3') || (sRef && sRef.includes('megaplay.buzz'))) {
-      if (!sRef) sRef = 'https://megaplay.buzz/';
-      if (!sOrig) sOrig = 'https://megaplay.buzz';
+    if (sUrl.includes('megaplay') || sUrl.includes('server_a3') || (sRef && sRef.includes('megaplay.buzz')) || !sRef) {
+      sRef = sRef || 'https://megaplay.buzz/';
+      sOrig = sOrig || 'https://megaplay.buzz';
     }
 
     if (sProxy === 'direct' || sProxy === 'none' || (sUrl.includes('vid-cdn.xyz') && !sUrl.includes('megaplay'))) {
       document.getElementById('proxyMode').value = 'direct';
       onProxyModeChange();
-    } else if (sProxy) {
-      document.getElementById('proxyMode').value = sProxy;
-      onProxyModeChange();
-    } else if (sUrl.startsWith('/proxy')) {
-      document.getElementById('proxyMode').value = 'direct';
+    } else {
+      document.getElementById('proxyMode').value = 'custom';
       onProxyModeChange();
     }
 
@@ -855,8 +852,10 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (sRef) document.getElementById('refIn').value = sRef;
     if (sOrig) document.getElementById('origIn').value = sOrig;
     showUrlTypeBadge(sUrl);
-    loadStream(sUrl, sRef || 'https://megaplay.buzz/', sOrig || 'https://megaplay.buzz', true);
+    loadStream(sUrl, sRef, sOrig, true);
   } else {
+    document.getElementById('proxyMode').value = 'custom';
+    onProxyModeChange();
     setStatus('Ready — paste an m3u8, mp4, or any stream URL above', 'var(--muted)');
   }
 });
@@ -867,16 +866,21 @@ window.addEventListener('message', (event) => {
     const sUrl = event.data.url;
     let sRef = event.data.ref || event.data.referer || '';
     let sOrig = event.data.origin || '';
-    if (sUrl.includes('megaplay') || sUrl.includes('server_a3')) {
-      if (!sRef) sRef = 'https://megaplay.buzz/';
-      if (!sOrig) sOrig = 'https://megaplay.buzz';
+    if (sUrl.includes('megaplay') || sUrl.includes('server_a3') || !sRef) {
+      sRef = sRef || 'https://megaplay.buzz/';
+      sOrig = sOrig || 'https://megaplay.buzz';
+    }
+    const sProxy = event.data.proxyMode || 'custom';
+    if (document.getElementById('proxyMode')) {
+      document.getElementById('proxyMode').value = sProxy;
+      onProxyModeChange();
     }
     if (sUrl) {
       document.getElementById('urlIn').value = sUrl;
       if (sRef) document.getElementById('refIn').value = sRef;
       if (sOrig) document.getElementById('origIn').value = sOrig;
       showUrlTypeBadge(sUrl);
-      loadStream(sUrl, sRef || 'https://megaplay.buzz/', sOrig || 'https://megaplay.buzz', true);
+      loadStream(sUrl, sRef, sOrig, true);
     }
   }
 });

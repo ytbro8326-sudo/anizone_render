@@ -737,10 +737,20 @@
 
         function getProxyUrl(url, referer, origin) {
             if (!url) return '';
-            if (url.startsWith('/proxy') || url.startsWith('http://localhost') || url.startsWith('http://127.0.0.1')) return url;
-            const autoReferer = referer || 'https://www.animegg.org/';
-            const autoOrigin = origin || (autoReferer.includes('megaplay.buzz') ? 'https://megaplay.buzz' : 'https://www.animegg.org');
-            return `/proxy?url=${encodeURIComponent(url)}&ref=${encodeURIComponent(autoReferer)}&origin=${encodeURIComponent(autoOrigin)}`;
+            if (url.startsWith('https://foxy-doxy') || url.startsWith('http://localhost') || url.startsWith('http://127.0.0.1')) return url;
+
+            const ref = referer || (url.includes('animegg') ? 'https://www.animegg.org/' : 'https://megaplay.buzz/');
+            const orig = origin || (ref.includes('animegg') ? 'https://www.animegg.org' : 'https://megaplay.buzz');
+
+            try {
+                const customProxyBase = "https://foxy-doxy.andruilsyestems.workers.dev/proxy";
+                const urlB64 = btoa(url).replace(/\+/g, '%2B').replace(/=/g, '%3D');
+                const hdrs = { "Referer": ref, "Origin": orig };
+                const hdrB64 = btoa(JSON.stringify(hdrs)).replace(/\+/g, '%2B').replace(/=/g, '%3D');
+                return `${customProxyBase}?url=${urlB64}&headers=${hdrB64}`;
+            } catch (e) {
+                return `/proxy?url=${encodeURIComponent(url)}&ref=${encodeURIComponent(ref)}&origin=${encodeURIComponent(orig)}`;
+            }
         }
 
         async function loadAllDatasets() {
