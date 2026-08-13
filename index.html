@@ -956,13 +956,20 @@
 
             placeholder.style.display = 'none';
 
-            if (!stream || !stream.url) return;
+            if (!stream || (!stream.url && !stream.embed_url)) return;
 
-            if (stream.type === 'iframe') {
+            // Check if stream is an AniZone stream or iframe type stream
+            const isAniZone = stream.server && (
+                stream.server.toLowerCase().includes('anizone') ||
+                stream.server.toLowerCase().includes('server a')
+            );
+
+            if (stream.type === 'iframe' || isAniZone) {
                 video.style.display = 'none';
                 video.pause();
-                iframe.src = stream.url;
+                iframe.src = stream.embed_url || stream.url;
                 iframe.style.display = 'block';
+                renderServerMenu();
                 return;
             }
 
