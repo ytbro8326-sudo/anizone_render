@@ -735,11 +735,11 @@
         const streamCache = new Map();
         let preFetchAbortToken = 0;
 
-        function getProxyUrl(url, referer) {
+        function getProxyUrl(url, referer, origin) {
             if (!url) return '';
             if (url.startsWith('/proxy') || url.startsWith('http://localhost') || url.startsWith('http://127.0.0.1')) return url;
             const autoReferer = referer || 'https://www.animegg.org/';
-            const autoOrigin = autoReferer.includes('megaplay.buzz') ? 'https://megaplay.buzz' : 'https://www.animegg.org';
+            const autoOrigin = origin || (autoReferer.includes('megaplay.buzz') ? 'https://megaplay.buzz' : 'https://www.animegg.org');
             return `/proxy?url=${encodeURIComponent(url)}&ref=${encodeURIComponent(autoReferer)}&origin=${encodeURIComponent(autoOrigin)}`;
         }
 
@@ -966,13 +966,11 @@
 
             const targetUrl = stream.url || stream.embed_url;
 
-            // Check if stream is an AniZone / Server A stream, m3u8 from vid-cdn.xyz, or iframe type stream
-            const isAniZone = (stream.server && (
-                stream.server.toLowerCase().includes('anizone') ||
-                stream.server.toLowerCase().includes('server a')
-            )) || (targetUrl && (targetUrl.includes('vid-cdn.xyz') || targetUrl.includes('anizone')));
+            // Check if stream is explicitly an AniZone iframe (MUST NOT match Server A3 or other menu servers)
+            const isAniZoneIframe = (stream.server && (stream.server.toLowerCase().includes('anizone') || stream.server.toLowerCase().includes('ani zone')) && !stream.server.toLowerCase().includes('server a3')) || 
+                                    (targetUrl && (targetUrl.includes('vid-cdn.xyz') || (targetUrl.includes('anizone') && !targetUrl.includes('megaplay.buzz'))));
 
-            if (stream.type === 'iframe' || isAniZone) {
+            if (stream.type === 'iframe' || isAniZoneIframe) {
                 video.style.display = 'none';
                 video.pause();
                 iframe.src = stream.url || stream.embed_url;
@@ -985,26 +983,44 @@
             iframe.src = 'about:blank';
             video.style.display = 'block';
 
-            const streamRef = (stream && (stream.ref || stream.referer)) || (stream && stream.server && stream.server.includes('Server A3') ? 'https://megaplay.buzz/' : '');
-            const proxiedUrl = getProxyUrl(stream.url, streamRef);
+            // Server A3 special referer handling
+            const isServerA3 = (stream.server && (stream.server.includes('Server A3') || stream.server.includes('A3'))) || 
+                               (stream.name && stream.name.includes('Server A3')) ||
+                               (activeCategory === 'A' && stream.quality === '480p');
+            const streamRef = isServerA3 ? 'https://megaplay.buzz/' : (stream.ref || stream.referer || 'https://www.animegg.org/');
+            const streamOrigin = isServerA3 ? 'https://megaplay.buzz' : (streamRef.includes('megaplay.buzz') ? 'https://megaplay.buzz' : 'https://www.animegg.org');
+
+            const proxiedUrl = getProxyUrl(stream.url, streamRef, streamOrigin);
 
             if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
 
+            // Enforce autoplay
+            video.autoplay = true;
+
             if (proxiedUrl.includes('.m3u8')) {
                 if (Hls.isSupported()) {
-                    hlsInstance = new Hls();
+                    hlsInstance = new Hls({ autoStartLoad: true });
                     hlsInstance.loadSource(proxiedUrl);
                     hlsInstance.attachMedia(video);
                     hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
-                        video.play().catch(() => { video.muted = true; video.play(); });
+                        const playPromise = video.play();
+                        if (playPromise && playPromise.catch) {
+                            playPromise.catch(() => { video.muted = true; video.play(); });
+                        }
                     });
                 } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
                     video.src = proxiedUrl;
-                    video.play().catch(() => { video.muted = true; video.play(); });
+                    const playPromise = video.play();
+                    if (playPromise && playPromise.catch) {
+                        playPromise.catch(() => { video.muted = true; video.play(); });
+                    }
                 }
             } else {
                 video.src = proxiedUrl;
-                video.play().catch(() => { video.muted = true; video.play(); });
+                const playPromise = video.play();
+                if (playPromise && playPromise.catch) {
+                    playPromise.catch(() => { video.muted = true; video.play(); });
+                }
             }
 
             video.onended = () => {
@@ -1036,7 +1052,13 @@
 
                 let s3Stream = findRes('480p') || dubStreams[2] || dubStreams[0];
                 if (s3Stream) {
-                    s3Stream = { ...s3Stream, server: 'Server A3 (480p DUB)', referer: 'https://megaplay.buzz/', ref: 'https://megaplay.buzz/' };
+                    s3Stream = { 
+                        ...s3Stream, 
+                        server: 'Server A3 (480p DUB)', 
+                        referer: 'https://megaplay.buzz/', 
+                        ref: 'https://megaplay.buzz/',
+                        origin: 'https://megaplay.buzz'
+                    };
                 }
 
                 serverList = [
