@@ -737,8 +737,10 @@
 
         function getProxyUrl(url) {
             if (!url) return '';
-            if (url.startsWith('https://anivexa.onrender.com/proxy')) return url;
-            return `https://anivexa.onrender.com/proxy?url=${encodeURIComponent(url)}&referer=https://www.animegg.org/`;
+            if (url.startsWith('/proxy') || url.startsWith('http://localhost') || url.startsWith('http://127.0.0.1')) return url;
+            const autoReferer = 'https://www.animegg.org/';
+            const autoOrigin = 'https://www.animegg.org';
+            return `/proxy?url=${encodeURIComponent(url)}&ref=${encodeURIComponent(autoReferer)}&origin=${encodeURIComponent(autoOrigin)}`;
         }
 
         async function loadAllDatasets() {
@@ -759,9 +761,13 @@
         }
 
         async function fetchEmbedPage(embedUrl) {
-            const proxyUrls = [];
-            if (window.location.origin && window.location.protocol.startsWith('http') && !window.location.origin.includes('github.io')) {
-                proxyUrls.push(window.location.origin + `/proxy?url=${encodeURIComponent(embedUrl)}`);
+            const autoReferer = 'https://www.animegg.org/';
+            const autoOrigin = 'https://www.animegg.org';
+            const proxyUrls = [
+                `/proxy?url=${encodeURIComponent(embedUrl)}&ref=${encodeURIComponent(autoReferer)}&origin=${encodeURIComponent(autoOrigin)}`
+            ];
+            if (window.location.origin && window.location.protocol.startsWith('http')) {
+                proxyUrls.push(`${window.location.origin}/proxy?url=${encodeURIComponent(embedUrl)}&ref=${encodeURIComponent(autoReferer)}&origin=${encodeURIComponent(autoOrigin)}`);
             }
             proxyUrls.push(
                 `https://api.allorigins.win/raw?url=${encodeURIComponent(embedUrl)}`,
