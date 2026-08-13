@@ -735,11 +735,11 @@
         const streamCache = new Map();
         let preFetchAbortToken = 0;
 
-        function getProxyUrl(url) {
+        function getProxyUrl(url, referer) {
             if (!url) return '';
             if (url.startsWith('/proxy') || url.startsWith('http://localhost') || url.startsWith('http://127.0.0.1')) return url;
-            const autoReferer = 'https://www.animegg.org/';
-            const autoOrigin = 'https://www.animegg.org';
+            const autoReferer = referer || 'https://www.animegg.org/';
+            const autoOrigin = autoReferer.includes('megaplay.buzz') ? 'https://megaplay.buzz' : 'https://www.animegg.org';
             return `/proxy?url=${encodeURIComponent(url)}&ref=${encodeURIComponent(autoReferer)}&origin=${encodeURIComponent(autoOrigin)}`;
         }
 
@@ -985,7 +985,8 @@
             iframe.src = 'about:blank';
             video.style.display = 'block';
 
-            const proxiedUrl = getProxyUrl(stream.url);
+            const streamRef = (stream && (stream.ref || stream.referer)) || (stream && stream.server && stream.server.includes('Server A3') ? 'https://megaplay.buzz/' : '');
+            const proxiedUrl = getProxyUrl(stream.url, streamRef);
 
             if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
 
@@ -1033,10 +1034,15 @@
                 const dubStreams = streams.filter(s => s.lang === 'dub');
                 const findRes = (res) => dubStreams.find(s => (s.quality || '').includes(res));
 
+                let s3Stream = findRes('480p') || dubStreams[2] || dubStreams[0];
+                if (s3Stream) {
+                    s3Stream = { ...s3Stream, server: 'Server A3 (480p DUB)', referer: 'https://megaplay.buzz/', ref: 'https://megaplay.buzz/' };
+                }
+
                 serverList = [
                     { name: 'Server A1 (1080p DUB)', quality: '1080p', speed: 'ULTRA HD', stream: findRes('1080p') || dubStreams[0] },
                     { name: 'Server A2 (720p DUB)', quality: '720p', speed: 'HIGH HD', stream: findRes('720p') || dubStreams[1] || dubStreams[0] },
-                    { name: 'Server A3 (480p DUB)', quality: '480p', speed: 'FAST', stream: findRes('480p') || dubStreams[2] || dubStreams[0] },
+                    { name: 'Server A3 (480p DUB)', quality: '480p', speed: 'FAST', referer: 'https://megaplay.buzz/', stream: s3Stream },
                     { name: 'Server A4 (360p DUB)', quality: '360p', speed: 'SMOOTH', stream: findRes('360p') || dubStreams[3] || dubStreams[0] },
                     { name: 'Server A5 (Auto HLS DUB)', quality: 'Auto', speed: 'ADAPTIVE', stream: dubStreams.find(s => s.url && s.url.includes('.m3u8')) || dubStreams[0] },
                     { name: 'Server A6 (Embed DUB)', quality: 'Embed', speed: 'BACKUP', stream: streams.find(s => s.type === 'iframe' && s.lang === 'dub') || dubStreams[0] },

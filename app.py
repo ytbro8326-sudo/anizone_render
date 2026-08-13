@@ -814,8 +814,8 @@ async def proxy_stream(url: str = Query(""), ref: str = Query(""), origin: str =
     if not url:
         return Response("Missing url param", status_code=400)
 
-    referer = ref or DEFAULT_PROXY_HEADERS["Referer"]
-    orig = origin or DEFAULT_PROXY_HEADERS["Origin"]
+    referer = ref or ("https://megaplay.buzz/" if ("megaplay" in url.lower() or "server_a3" in url.lower()) else "https://www.animegg.org/")
+    orig = origin or ("https://megaplay.buzz" if "megaplay.buzz" in referer else "https://www.animegg.org")
     headers = {**DEFAULT_PROXY_HEADERS, "Referer": referer, "Origin": orig}
 
     try:
