@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AniZone Stream Player · Professional Multi-Server Extractor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        :root {
+            --bg-main: #06070a;
+            --bg-card: #0d0f17;
+            --bg-card-hover: #141724;
+            --bg-input: #121522;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(124, 92, 252, 0.4);
+            --primary: #7c5cfc;
+            --primary-hover: #6a46f9;
+            --primary-glow: rgba(124, 92, 252, 0.35);
+            --secondary: #a78bfa;
+            --accent-cyan: #06b6d4;
+            --accent-green: #10b981;
+            --accent-amber: #f59e0b;
+            --text-main: #f3f4f6;
+            --text-sub: #9ca3af;
+            --text-muted: #6b7280;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg-main);
+            background-image: 
+                radial-gradient(at 10% 10%, rgba(124, 92, 252, 0.12) 0px, transparent 50%),
+                radial-gradient(at 90% 90%, rgba(6, 182, 212, 0.08) 0px, transparent 50%);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            color: var(--text-main);
+            overflow-x: hidden;
+        }
+
+        #app {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100vh;
+        }
+
+        /* ── TOP HEADER / NAVBAR ── */
+        #topbar {
+            background: rgba(13, 15, 23, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 10px 20px;
+            z-index: 50;
+            flex-shrink: 0;
+        }
+
+        #topbar-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        .brand-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-logo {
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #a78bfa 0%, #7c5cfc 50%, #06b6d4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .brand-badge {
+            font-size: 0.65rem;
+            font-weight: 700;
+            background: rgba(124, 92, 252, 0.15);
+            border: 1px solid rgba(124, 92, 252, 0.3);
+            color: var(--secondary);
+            padding: 2px 8px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .controls-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .field-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            transition: border-color 0.2s;
+        }
+
+        .field-group:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px var(--primary-glow);
+        }
+
+        .field-group label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            white-space: nowrap;
+        }
+
+        .field-group input {
+            width: 70px;
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88rem;
+            font-weight: 600;
+            outline: none;
+        }
+
+        #lang-toggle {
+            display: flex;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            padding: 2px;
+        }
+
+        #lang-toggle button {
+            padding: 4px 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--text-sub);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        #lang-toggle button.active {
+            background: var(--primary);
+            color: #ffffff;
+            box-shadow: 0 2px 8px var(--primary-glow);
+        }
+
+        .autonext-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            padding: 5px 12px;
+            border-radius: var(--radius-sm);
+        }
+
+        .autonext-wrap span {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-sub);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .switch {
+            position: relative;
+            width: 32px;
+            height: 18px;
+        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute;
+            inset: 0;
+            background: #232738;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .slider::before {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            left: 3px;
+            top: 3px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+
+        .switch input:checked + .slider { background: var(--primary); }
+        .switch input:checked + .slider::before { transform: translateX(14px); }
+
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            background: var(--bg-input);
+            color: var(--text-main);
+            transition: all 0.2s ease;
+        }
+
+        .btn-action:hover {
+            border-color: var(--primary);
+            background: rgba(124, 92, 252, 0.12);
+            color: #fff;
+        }
+
+        .btn-action.primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+            border-color: transparent;
+            color: #fff;
+            box-shadow: 0 4px 12px var(--primary-glow);
+        }
+
+        .btn-action.primary:hover {
+            opacity: 0.92;
+            transform: translateY(-1px);
+        }
+
+        #prefetch-badge {
+            display: none;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: var(--accent-green);
+        }
+
+        /* ── MAIN CONTENT AREA ── */
+        #main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #player-section {
+            flex: 1;
+            position: relative;
+            background: #000000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #player-wrap {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #player-wrap iframe,
+        #player-wrap video {
+            width: 100%;
+            height: 100%;
+            border: none;
+            object-fit: contain;
+            background: #000;
+        }
+
+        #placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 20px;
+        }
+
+        #placeholder svg {
+            width: 64px;
+            height: 64px;
+            opacity: 0.4;
+            color: var(--secondary);
+        }
+
+        #placeholder h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-sub);
+        }
+
+        #placeholder p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            max-width: 400px;
+        }
+
+        /* Auto-Next Overlay */
+        #autonext-overlay {
+            display: none;
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(13, 15, 23, 0.92);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 16px 20px;
+            min-width: 260px;
+            z-index: 40;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .an-header {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 4px;
+        }
+
+        .an-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 12px;
+        }
+
+        .an-progress-bg {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .an-progress-bar {
+            height: 100%;
+            width: 100%;
+            background: var(--primary);
+            transform-origin: left;
+            transition: transform linear;
+        }
+
+        .an-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .an-actions button {
+            flex: 1;
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.15s;
+        }
+
+        .an-btn-now {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        .an-btn-cancel {
+            background: var(--bg-input);
+            color: var(--text-sub);
+            border: 1px solid var(--border-color) !important;
+        }
+
+        /* ── PROFESSIONAL SERVER MENU DRAWER / PANEL ── */
+        #server-drawer {
+            background: var(--bg-card);
+            border-top: 1px solid var(--border-color);
+            padding: 16px 20px;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+
+        .drawer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .drawer-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-sub);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .drawer-title span {
+            color: var(--primary);
+        }
+
+        /* MENU CATEGORY TABS (Menu A, Menu B, Menu C) */
+        .menu-tabs {
+            display: flex;
+            gap: 10px;
+            background: var(--bg-input);
+            padding: 4px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+        }
+
+        .menu-tab-btn {
+            padding: 6px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 0.78rem;
+            font-weight: 700;
+            border: none;
+            background: transparent;
+            color: var(--text-sub);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .menu-tab-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .menu-tab-btn.active {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 4px 12px var(--primary-glow);
+        }
+
+        .menu-tab-badge {
+            font-size: 0.65rem;
+            padding: 1px 6px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* 6 SERVERS GRID LIST FOR EACH MENU */
+        .servers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .server-card {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 10px 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .server-card:hover {
+            border-color: var(--primary);
+            background: var(--bg-card-hover);
+            transform: translateY(-1px);
+        }
+
+        .server-card.active {
+            background: rgba(124, 92, 252, 0.15);
+            border-color: var(--primary);
+            box-shadow: 0 0 12px var(--primary-glow);
+        }
+
+        .server-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .server-name {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .server-subtext {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+        }
+
+        .server-badges {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .badge-res {
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .badge-speed {
+            font-size: 0.62rem;
+            font-weight: 700;
+            padding: 2px 5px;
+            border-radius: 4px;
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-green);
+        }
+
+        .spin-loader {
+            width: 14px;
+            height: 14px;
+            border: 2px solid var(--border-color);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive tweak */
+        @media (max-width: 768px) {
+            #topbar { padding: 10px 12px; }
+            .servers-grid { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+            #server-drawer { padding: 12px; }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <!-- TOP HEADER BAR -->
+        <header id="topbar">
+            <div id="topbar-content">
+                <div class="brand-container">
+                    <div class="brand-logo">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                        AniZone Stream
+                    </div>
+                    <span class="brand-badge">Multi-Server v3.3</span>
+                </div>
+
+                <div class="controls-group">
+                    <div class="field-group">
+                        <label for="inp-mal">MAL ID</label>
+                        <input id="inp-mal" type="number" placeholder="21" value="21" min="1">
+                    </div>
+
+                    <div class="field-group">
+                        <label for="inp-ep">Ep</label>
+                        <input id="inp-ep" type="number" placeholder="1" value="1" min="1">
+                    </div>
+
+                    <div id="lang-toggle">
+                        <button id="btn-dub" class="active" onclick="setLang('dub')">DUB</button>
+                        <button id="btn-sub" onclick="setLang('sub')">SUB</button>
+                    </div>
+
+                    <div class="autonext-wrap">
+                        <span>Auto-Next</span>
+                        <label class="switch">
+                            <input type="checkbox" id="chk-autonext" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <button class="btn-action" onclick="goPrevEp()" title="Previous Episode">
+                        ‹ Prev
+                    </button>
+
+                    <button class="btn-action primary" onclick="loadPlayer()">
+                        ▶ Play
+                    </button>
+
+                    <button class="btn-action" onclick="goNextEp()" title="Next Episode">
+                        Next ›
+                    </button>
+
+                    <div id="prefetch-badge">
+                        <span>⚡</span>
+                        <span id="prefetch-text">+50 Ready</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- MAIN PLAYER AREA -->
+        <div id="main-container">
+            <section id="player-section">
+                <div id="player-wrap">
+                    <div id="placeholder">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="2" y="4" width="20" height="16" rx="3"></rect>
+                            <polygon points="10 9 16 12 10 15 10 9" fill="currentColor"></polygon>
+                        </svg>
+                        <h2>Ready to Stream Anime</h2>
+                        <p>Enter MAL ID & Episode number above, then click <strong>Play</strong> or select a server menu below.</p>
+                    </div>
+
+                    <video id="videoPlayer" controls autoplay style="display:none;"></video>
+                    <iframe id="player-iframe" allow="autoplay; fullscreen" allowfullscreen style="display:none;"></iframe>
+                </div>
+
+                <!-- Auto-Next Countdown Overlay -->
+                <div id="autonext-overlay">
+                    <div class="an-header">Up Next</div>
+                    <div class="an-title" id="an-ep-label">Episode 2</div>
+                    <div class="an-progress-bg">
+                        <div class="an-progress-bar" id="an-bar"></div>
+                    </div>
+                    <div class="an-actions">
+                        <button class="an-btn-now" onclick="goNextNow()">Play Now</button>
+                        <button class="an-btn-cancel" onclick="cancelAutoNext()">Cancel</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- MENU-WISE SERVER DRAWER -->
+            <section id="server-drawer">
+                <div class="drawer-header">
+                    <div class="drawer-title">
+                        <span>⚡</span> Server Selection Menu (6 Servers Per Category)
+                    </div>
+
+                    <!-- Category Tabs (Menu A, Menu B, Menu C) -->
+                    <div class="menu-tabs">
+                        <button class="menu-tab-btn active" id="tab-menu-a" onclick="switchServerCategory('A')">
+                            Menu A (DUB) <span class="menu-tab-badge">6</span>
+                        </button>
+                        <button class="menu-tab-btn" id="tab-menu-b" onclick="switchServerCategory('B')">
+                            Menu B (SUB) <span class="menu-tab-badge">6</span>
+                        </button>
+                        <button class="menu-tab-btn" id="tab-menu-c" onclick="switchServerCategory('C')">
+                            Menu C (Engines) <span class="menu-tab-badge">6</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="server-loading-state" style="display:none; color: var(--text-muted); font-size: 0.8rem; padding: 10px 0;">
+                    <div class="spin-loader" style="display:inline-block; vertical-align:middle; margin-right:8px;"></div>
+                    Extracting high-speed video streams for MAL episode...
+                </div>
+
+                <!-- Server Grid List for current active Menu -->
+                <div class="servers-grid" id="servers-grid">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const DATASET_URLS = [
+            "https://raw.githubusercontent.com/dokkarrr/final_animgeg_embed-scraper/refs/heads/main/output/animegg_series.json",
+            "https://raw.githubusercontent.com/dokkarrr/final_animgeg_embed-scraper/refs/heads/main/output/animegg_series2.json",
+            "https://raw.githubusercontent.com/dokkarrr/final_animgeg_embed-scraper/refs/heads/main/output/animegg_series3.json",
+            "https://raw.githubusercontent.com/dokkarrr/final_animgeg_embed-scraper/refs/heads/main/output/animegg_series4.json",
+            "https://raw.githubusercontent.com/dokkarrr/final_animgeg_embed-scraper/refs/heads/main/output/animegg_series5.json",
+            "https://raw.githubusercontent.com/dokkarrr/final_animgeg_embed-scraper/refs/heads/main/output/animegg_series6.json",
+        ];
+
+        let datasetCache = null;
+        let hlsInstance = null;
+        let currentLang = 'dub';
+        let activeCategory = 'A'; // 'A', 'B', or 'C'
+        let autoNextTimer = null;
+        let activeServerStream = null;
+        let allExtractedStreams = [];
+        let cachedMalId = null;
+        let cachedEp = null;
+        let _fetchToken = 0;
+        const COUNTDOWN_S = 10;
+        const streamCache = new Map();
+        let preFetchAbortToken = 0;
+
+        function getProxyUrl(url) {
+            if (!url) return '';
+            if (url.startsWith('https://anivexa.onrender.com/proxy')) return url;
+            return `https://anivexa.onrender.com/proxy?url=${encodeURIComponent(url)}&referer=https://www.animegg.org/`;
+        }
+
+        async function loadAllDatasets() {
+            if (datasetCache) return datasetCache;
+            try {
+                const promises = DATASET_URLS.map(url => fetch(url).then(r => r.ok ? r.json() : []).catch(() => []));
+                const results = await Promise.all(promises);
+                datasetCache = results.flat();
+                return datasetCache;
+            } catch (err) {
+                throw new Error("Failed to load AnimeGG datasets: " + err.message);
+            }
+        }
+
+        async function searchAnimeGG(malId) {
+            const datasets = await loadAllDatasets();
+            return datasets.find(item => item.mal_id === parseInt(malId));
+        }
+
+        async function fetchEmbedPage(embedUrl) {
+            const proxyUrls = [];
+            if (window.location.origin && window.location.protocol.startsWith('http') && !window.location.origin.includes('github.io')) {
+                proxyUrls.push(window.location.origin + `/proxy?url=${encodeURIComponent(embedUrl)}`);
+            }
+            proxyUrls.push(
+                `https://api.allorigins.win/raw?url=${encodeURIComponent(embedUrl)}`,
+                `https://corsproxy.io/?${encodeURIComponent(embedUrl)}`,
+                `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(embedUrl)}`
+            );
+
+            for (const pUrl of proxyUrls) {
+                try {
+                    const res = await fetch(pUrl);
+                    if (res.ok) {
+                        const html = await res.text();
+                        if (html.includes("videoSources")) return html;
+                    }
+                } catch (e) { }
+            }
+            throw new Error("Could not fetch AnimeGG embed page via CORS proxies");
+        }
+
+        async function extractEmbedSources(embedUrl) {
+            try {
+                const html = await fetchEmbedPage(embedUrl);
+                const vsMatch = html.match(/var videoSources\s*=\s*(\[.*?\])\s*;/s);
+                if (!vsMatch) return {};
+
+                const sources = [];
+                const regex = /\{file:\s*"([^"]+)".*?label:\s*"([^"]+)"/gs;
+                let match;
+                while ((match = regex.exec(vsMatch[1])) !== null) {
+                    sources.push({ file: match[1], label: match[2] });
+                }
+
+                const results = {};
+                for (const src of sources) {
+                    let proxyUrl = src.file.startsWith("/") ? "https://www.animegg.org" + src.file : src.file;
+                    results[src.label] = proxyUrl;
+                }
+                return results;
+            } catch (e) {
+                return {};
+            }
+        }
+
+        async function getAnimeGGStreams(malId, epNum) {
+            const cacheKey = `${malId}_${epNum}`;
+            if (streamCache.has(cacheKey)) {
+                return await streamCache.get(cacheKey);
+            }
+
+            const fetchPromise = (async () => {
+                const animeEntry = await searchAnimeGG(malId);
+                if (!animeEntry) throw new Error(`MAL ID ${malId} not found in AnimeGG datasets`);
+
+                const title = animeEntry.title || `Anime ${malId}`;
+                const episodes = animeEntry.episodes || [];
+                const matchingEp = episodes.find(ep => ep.ep === parseInt(epNum));
+
+                if (!matchingEp) throw new Error(`Episode ${epNum} for MAL ID ${malId} ('${title}') not found`);
+
+                const subEmbed = matchingEp.sub;
+                const dubEmbed = matchingEp.dub;
+                const streams = [];
+
+                if (dubEmbed) {
+                    const dubRes = await extractEmbedSources(dubEmbed);
+                    Object.keys(dubRes).forEach(label => {
+                        streams.push({
+                            server: `Server A (${label} DUB)`,
+                            url: dubRes[label],
+                            type: "mp4",
+                            quality: label,
+                            lang: "dub",
+                            embed_url: dubEmbed
+                        });
+                    });
+                }
+
+                if (subEmbed) {
+                    const subRes = await extractEmbedSources(subEmbed);
+                    Object.keys(subRes).forEach(label => {
+                        streams.push({
+                            server: `Server B (${label} SUB)`,
+                            url: subRes[label],
+                            type: "mp4",
+                            quality: label,
+                            lang: "sub",
+                            embed_url: subEmbed
+                        });
+                    });
+                }
+
+                if (streams.length === 0) {
+                    if (dubEmbed) streams.push({ server: "Server A (DUB Embed)", url: dubEmbed, type: "iframe", quality: "Embed", lang: "dub" });
+                    if (subEmbed) streams.push({ server: "Server B (SUB Embed)", url: subEmbed, type: "iframe", quality: "Embed", lang: "sub" });
+                }
+
+                return {
+                    status: "success",
+                    server: "AnimeGG",
+                    malId: parseInt(malId),
+                    episode: parseInt(epNum),
+                    animeTitle: title,
+                    subEmbed: subEmbed,
+                    dubEmbed: dubEmbed,
+                    results: {
+                        stream_url: streams.length > 0 ? streams[0].url : null,
+                        streams: streams
+                    }
+                };
+            })();
+
+            streamCache.set(cacheKey, fetchPromise);
+            return await fetchPromise;
+        }
+
+        async function preExtractNextEpisodes(malId, currentEpNum, totalToFetch = 50) {
+            const myPrefetchToken = ++preFetchAbortToken;
+            const startEp = parseInt(currentEpNum, 10) + 1;
+            const badgeEl = document.getElementById('prefetch-badge');
+            const textEl = document.getElementById('prefetch-text');
+
+            const animeEntry = await searchAnimeGG(malId);
+            if (!animeEntry || !animeEntry.episodes) return;
+
+            const episodes = animeEntry.episodes;
+            const maxEp = Math.max(...episodes.map(e => e.ep));
+            const endEp = Math.min(startEp + totalToFetch - 1, maxEp);
+            const targetCount = Math.max(0, endEp - startEp + 1);
+
+            if (targetCount === 0) return;
+
+            if (badgeEl && textEl) {
+                badgeEl.style.display = 'inline-flex';
+                textEl.textContent = `Pre-extracting (+${targetCount})...`;
+            }
+
+            let fetchedCount = 0;
+            for (let ep = startEp; ep <= endEp; ep++) {
+                if (myPrefetchToken !== preFetchAbortToken) return;
+
+                const cacheKey = `${malId}_${ep}`;
+                if (!streamCache.has(cacheKey)) {
+                    try {
+                        await getAnimeGGStreams(malId, ep);
+                        if (myPrefetchToken !== preFetchAbortToken) return;
+                    } catch (e) {}
+                    await new Promise(r => setTimeout(r, 350));
+                }
+                fetchedCount++;
+                if (textEl && myPrefetchToken === preFetchAbortToken) {
+                    textEl.textContent = `(${fetchedCount}/${targetCount}) Ready`;
+                }
+            }
+
+            if (myPrefetchToken === preFetchAbortToken && badgeEl && textEl) {
+                textEl.textContent = `+${targetCount} Ep Ready`;
+            }
+        }
+
+        function setLang(lang) {
+            currentLang = lang;
+            document.getElementById('btn-dub').classList.toggle('active', lang === 'dub');
+            document.getElementById('btn-sub').classList.toggle('active', lang === 'sub');
+            
+            // Switch category tab automatically to match preferred language
+            if (lang === 'dub') switchServerCategory('A');
+            else switchServerCategory('B');
+
+            const malId = String(document.getElementById('inp-mal').value).trim();
+            const ep = String(document.getElementById('inp-ep').value).trim();
+
+            if (allExtractedStreams && allExtractedStreams.length > 0 && cachedMalId === malId && cachedEp === ep) {
+                renderServerMenu();
+            } else if (malId && ep) {
+                showPlayer(malId, ep, lang);
+            }
+        }
+
+        function switchServerCategory(cat) {
+            activeCategory = cat;
+            document.getElementById('tab-menu-a').classList.toggle('active', cat === 'A');
+            document.getElementById('tab-menu-b').classList.toggle('active', cat === 'B');
+            document.getElementById('tab-menu-c').classList.toggle('active', cat === 'C');
+            renderServerMenu();
+        }
+
+        function playStream(stream) {
+            activeServerStream = stream;
+            const placeholder = document.getElementById('placeholder');
+            const video = document.getElementById('videoPlayer');
+            const iframe = document.getElementById('player-iframe');
+
+            placeholder.style.display = 'none';
+
+            if (!stream || !stream.url) return;
+
+            if (stream.type === 'iframe') {
+                video.style.display = 'none';
+                video.pause();
+                iframe.src = stream.url;
+                iframe.style.display = 'block';
+                return;
+            }
+
+            iframe.style.display = 'none';
+            iframe.src = 'about:blank';
+            video.style.display = 'block';
+
+            const proxiedUrl = getProxyUrl(stream.url);
+
+            if (hlsInstance) { hlsInstance.destroy(); hlsInstance = null; }
+
+            if (proxiedUrl.includes('.m3u8')) {
+                if (Hls.isSupported()) {
+                    hlsInstance = new Hls();
+                    hlsInstance.loadSource(proxiedUrl);
+                    hlsInstance.attachMedia(video);
+                    hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+                        video.play().catch(() => { video.muted = true; video.play(); });
+                    });
+                } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                    video.src = proxiedUrl;
+                    video.play().catch(() => { video.muted = true; video.play(); });
+                }
+            } else {
+                video.src = proxiedUrl;
+                video.play().catch(() => { video.muted = true; video.play(); });
+            }
+
+            video.onended = () => {
+                const malId = document.getElementById('inp-mal').value.trim();
+                const ep = document.getElementById('inp-ep').value.trim();
+                if (malId && ep) triggerAutoNext(malId, ep, currentLang);
+            };
+
+            renderServerMenu();
+        }
+
+        /**
+         * Renders exactly 6 servers for each Menu Category (Menu A, Menu B, Menu C)
+         */
+        function renderServerMenu() {
+            const grid = document.getElementById('servers-grid');
+            grid.innerHTML = '';
+
+            const streams = allExtractedStreams || [];
+            const malId = document.getElementById('inp-mal').value.trim() || '21';
+            const ep = document.getElementById('inp-ep').value.trim() || '1';
+
+            let serverList = [];
+
+            if (activeCategory === 'A') {
+                // MENU A: 6 Fast DUB Servers
+                const dubStreams = streams.filter(s => s.lang === 'dub');
+                const findRes = (res) => dubStreams.find(s => (s.quality || '').includes(res));
+
+                serverList = [
+                    { name: 'Server A1 (1080p DUB)', quality: '1080p', speed: 'ULTRA HD', stream: findRes('1080p') || dubStreams[0] },
+                    { name: 'Server A2 (720p DUB)', quality: '720p', speed: 'HIGH HD', stream: findRes('720p') || dubStreams[1] || dubStreams[0] },
+                    { name: 'Server A3 (480p DUB)', quality: '480p', speed: 'FAST', stream: findRes('480p') || dubStreams[2] || dubStreams[0] },
+                    { name: 'Server A4 (360p DUB)', quality: '360p', speed: 'SMOOTH', stream: findRes('360p') || dubStreams[3] || dubStreams[0] },
+                    { name: 'Server A5 (Auto HLS DUB)', quality: 'Auto', speed: 'ADAPTIVE', stream: dubStreams.find(s => s.url && s.url.includes('.m3u8')) || dubStreams[0] },
+                    { name: 'Server A6 (Embed DUB)', quality: 'Embed', speed: 'BACKUP', stream: streams.find(s => s.type === 'iframe' && s.lang === 'dub') || dubStreams[0] },
+                ];
+            } else if (activeCategory === 'B') {
+                // MENU B: 6 Master SUB Servers
+                const subStreams = streams.filter(s => s.lang === 'sub');
+                const findRes = (res) => subStreams.find(s => (s.quality || '').includes(res));
+
+                serverList = [
+                    { name: 'Server B1 (1080p SUB)', quality: '1080p', speed: 'ULTRA HD', stream: findRes('1080p') || subStreams[0] },
+                    { name: 'Server B2 (720p SUB)', quality: '720p', speed: 'HIGH HD', stream: findRes('720p') || subStreams[1] || subStreams[0] },
+                    { name: 'Server B3 (480p SUB)', quality: '480p', speed: 'FAST', stream: findRes('480p') || subStreams[2] || subStreams[0] },
+                    { name: 'Server B4 (360p SUB)', quality: '360p', speed: 'SMOOTH', stream: findRes('360p') || subStreams[3] || subStreams[0] },
+                    { name: 'Server B5 (Auto HLS SUB)', quality: 'Auto', speed: 'ADAPTIVE', stream: subStreams.find(s => s.url && s.url.includes('.m3u8')) || subStreams[0] },
+                    { name: 'Server B6 (Embed SUB)', quality: 'Embed', speed: 'BACKUP', stream: streams.find(s => s.type === 'iframe' && s.lang === 'sub') || subStreams[0] },
+                ];
+            } else if (activeCategory === 'C') {
+                // MENU C: 6 Multi-Engine / Provider Servers
+                serverList = [
+                    { name: 'Server C1 (MegaPlay Engine)', quality: 'Core', speed: 'STABLE', stream: streams[0] || { server: 'MegaPlay', url: `/api/stream?mal_id=${malId}&ep=${ep}&server=megaplay`, type: 'mp4', quality: '1080p' } },
+                    { name: 'Server C2 (AniZone CDN)', quality: 'Fast', speed: 'LIGHTNING', stream: streams[1] || streams[0] },
+                    { name: 'Server C3 (ViviBebe / FlixCloud)', quality: 'Multi', speed: 'HD', stream: streams[2] || streams[0] },
+                    { name: 'Server C4 (OktaVid / PlayMongo)', quality: 'Direct', speed: 'FAST', stream: streams[3] || streams[0] },
+                    { name: 'Server C5 (VOE.sx External)', quality: 'Mirror', speed: 'BACKUP', stream: streams.find(s => s.server && s.server.includes('VOE')) || streams[0] },
+                    { name: 'Server C6 (Multi-Proxy Backup)', quality: 'Proxy', speed: 'RELIABLE', stream: streams[streams.length - 1] || streams[0] },
+                ];
+            }
+
+            serverList.forEach((item, index) => {
+                const card = document.createElement('div');
+                const isSelected = item.stream && activeServerStream === item.stream;
+                card.className = 'server-card' + (isSelected ? ' active' : '');
+
+                const info = document.createElement('div');
+                info.className = 'server-info';
+
+                const name = document.createElement('div');
+                name.className = 'server-name';
+                name.textContent = item.name;
+
+                const subtext = document.createElement('div');
+                subtext.className = 'server-subtext';
+                subtext.textContent = item.stream ? `${item.stream.type ? item.stream.type.toUpperCase() : 'MP4'} · Online` : 'Ready to load';
+
+                info.appendChild(name);
+                info.appendChild(subtext);
+
+                const badges = document.createElement('div');
+                badges.className = 'server-badges';
+
+                const bRes = document.createElement('span');
+                bRes.className = 'badge-res';
+                bRes.textContent = item.quality;
+
+                const bSpeed = document.createElement('span');
+                bSpeed.className = 'badge-speed';
+                bSpeed.textContent = item.speed;
+
+                badges.appendChild(bRes);
+                badges.appendChild(bSpeed);
+
+                card.appendChild(info);
+                card.appendChild(badges);
+
+                card.onclick = () => {
+                    if (item.stream) {
+                        playStream(item.stream);
+                    }
+                };
+
+                grid.appendChild(card);
+            });
+        }
+
+        async function showPlayer(malId, ep, lang = 'dub') {
+            cancelAutoNext();
+            currentLang = lang;
+            const myToken = ++_fetchToken;
+
+            document.getElementById('inp-mal').value = malId;
+            document.getElementById('inp-ep').value = ep;
+            document.getElementById('btn-dub').classList.toggle('active', lang === 'dub');
+            document.getElementById('btn-sub').classList.toggle('active', lang === 'sub');
+
+            document.title = `AniZone Stream · MAL ${malId} · Ep ${ep} · ${lang.toUpperCase()}`;
+
+            const loadingState = document.getElementById('server-loading-state');
+            if (loadingState) loadingState.style.display = 'block';
+
+            try {
+                const data = await getAnimeGGStreams(malId, ep);
+                if (myToken !== _fetchToken) return;
+
+                if (loadingState) loadingState.style.display = 'none';
+
+                const streams = data.results.streams || [];
+                allExtractedStreams = streams;
+                cachedMalId = String(malId);
+                cachedEp = String(ep);
+
+                if (streams.length > 0) {
+                    // Default to first matching stream for preferred language
+                    const prefStreams = streams.filter(s => s.lang === lang);
+                    const initialStream = prefStreams.length > 0 ? prefStreams[0] : streams[0];
+                    playStream(initialStream);
+
+                    preExtractNextEpisodes(malId, ep, 50);
+                } else {
+                    renderServerMenu();
+                }
+            } catch (err) {
+                if (myToken !== _fetchToken) return;
+                if (loadingState) loadingState.style.display = 'none';
+                renderServerMenu();
+            }
+        }
+
+        function loadPlayer() {
+            const malId = document.getElementById('inp-mal').value.trim();
+            const ep = document.getElementById('inp-ep').value.trim();
+            if (!malId || !ep) { alert('Please enter both MAL ID and episode number.'); return; }
+            showPlayer(malId, ep, currentLang);
+        }
+
+        function goPrevEp() {
+            const malId = document.getElementById('inp-mal').value.trim();
+            const ep = parseInt(document.getElementById('inp-ep').value.trim(), 10);
+            if (!malId || isNaN(ep) || ep <= 1) return;
+            showPlayer(malId, ep - 1, currentLang);
+        }
+
+        function goNextEp() {
+            const malId = document.getElementById('inp-mal').value.trim();
+            const ep = parseInt(document.getElementById('inp-ep').value.trim(), 10);
+            if (!malId || isNaN(ep)) return;
+            showPlayer(malId, ep + 1, currentLang);
+        }
+
+        function triggerAutoNext(malId, ep, lang) {
+            if (!document.getElementById('chk-autonext').checked) return;
+            const nextEp = parseInt(ep, 10) + 1;
+            document.getElementById('an-ep-label').textContent = `Episode ${nextEp}`;
+            const overlay = document.getElementById('autonext-overlay');
+            const bar = document.getElementById('an-bar');
+            overlay.style.display = 'block';
+            bar.style.transition = 'none';
+            bar.style.transform = 'scaleX(1)';
+            bar.getBoundingClientRect();
+            bar.style.transition = `transform ${COUNTDOWN_S}s linear`;
+            bar.style.transform = 'scaleX(0)';
+            let remaining = COUNTDOWN_S;
+            autoNextTimer = setInterval(() => { if (--remaining <= 0) goNextNow(); }, 1000);
+        }
+
+        function goNextNow() {
+            cancelAutoNext();
+            const malId = document.getElementById('inp-mal').value.trim();
+            const ep = parseInt(document.getElementById('inp-ep').value.trim(), 10);
+            if (!malId || isNaN(ep)) return;
+            showPlayer(malId, ep + 1, currentLang);
+        }
+
+        function cancelAutoNext() {
+            clearInterval(autoNextTimer);
+            autoNextTimer = null;
+            const overlay = document.getElementById('autonext-overlay');
+            if (overlay) overlay.style.display = 'none';
+        }
+
+        function parseParamsFromUrl() {
+            const path = window.location.pathname;
+            const search = window.location.search;
+            const hash = window.location.hash;
+
+            const pathMatch = path.match(/\/(\d+)\/(\d+)(?:\/(dub|sub))?\/?$/i);
+            if (pathMatch) {
+                return { malId: pathMatch[1], epNum: pathMatch[2], lang: pathMatch[3] || 'dub' };
+            }
+
+            const queryDirectMatch = search.match(/\?(\d+)[\/&](\d+)(?:[\/&](dub|sub))?/i);
+            if (queryDirectMatch) {
+                return { malId: queryDirectMatch[1], epNum: queryDirectMatch[2], lang: queryDirectMatch[3] || 'dub' };
+            }
+
+            const searchParams = new URLSearchParams(search);
+            const qMal = searchParams.get('mal_id') || searchParams.get('malId') || searchParams.get('id');
+            const qEp = searchParams.get('ep') || searchParams.get('ep_num') || searchParams.get('episode');
+            const qLang = searchParams.get('lang') || searchParams.get('type');
+            if (qMal && qEp) {
+                return { malId: qMal, epNum: qEp, lang: qLang || 'dub' };
+            }
+
+            const hashMatch = hash.match(/#\/?(\d+)[\/&](\d+)(?:[\/&](dub|sub))?/i);
+            if (hashMatch) {
+                return { malId: hashMatch[1], epNum: hashMatch[2], lang: hashMatch[3] || 'dub' };
+            }
+
+            return null;
+        }
+
+        window.AnimeGGAPI = {
+            getStreams: getAnimeGGStreams,
+            search: searchAnimeGG,
+            loadDatasets: loadAllDatasets,
+            getProxyUrl: getProxyUrl
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            renderServerMenu();
+            const params = parseParamsFromUrl();
+            if (params) {
+                showPlayer(params.malId, params.epNum, params.lang);
+            }
+        });
+    </script>
+</body>
+
+</html>

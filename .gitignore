@@ -1,0 +1,8 @@
+token.txt
+.env
+__pycache__/
+*.pyc
+.vscode/
+.idea/
+playlist_en_dub.m3u8
+Github_push_create_delete.py
